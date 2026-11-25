@@ -22,16 +22,20 @@ ENTRY = (
 )
 
 # The gate: /output/entry.txt must be UTF-8 text of 1 to 200 characters,
-# not only white space. Refuse to write anything that would fail it.
-assert 1 <= len(ENTRY.strip()) <= 200, "entry must be 1-200 characters"
-assert ENTRY.strip(), "entry must not be only white space"
-assert "\n" not in ENTRY.strip(), "entry must be a single line"
+# not only white space, and a single line. Validate before writing so a
+# bad line can never reach the gate: refuse anything that would fail it.
+def validate(entry: str) -> str:
+    text = entry.strip()
+    assert text, "entry must not be only white space"
+    assert 1 <= len(text) <= 200, f"entry must be 1-200 characters, got {len(text)}"
+    assert "\n" not in text, "entry must be a single line"
+    return text
 
 
 def main() -> None:
     out = Path("/output/entry.txt")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(ENTRY, encoding="utf-8")
+    out.write_text(validate(ENTRY) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
